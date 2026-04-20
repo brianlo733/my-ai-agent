@@ -2,9 +2,11 @@ name: Daily AI Agent Report
 
 on:
   schedule:
-    # 每日香港時間朝早 8 點執行 (UTC 0:00)
-    - cron: '0 0 * * *'
-  workflow_dispatch: # 呢行等你可以隨時「手動測試」，唔使等聽朝
+    - cron: '0 0 * * *' # 每日香港時間 8 點
+  workflow_dispatch: # 俾你手動撳掣執行
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true # 解決 Node.js 20 過時警告
 
 jobs:
   run-bot:
@@ -14,13 +16,15 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 安裝 Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5 # 升級到 v5
         with:
           python-version: '3.11'
 
       - name: 安裝必要套件
         run: |
+          python -m pip install --upgrade pip
           pip install google-genai
+
       - name: 執行 AI 報告程式
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}

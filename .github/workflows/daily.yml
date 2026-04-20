@@ -2,10 +2,9 @@ name: Daily AI Agent Report
 
 on:
   schedule:
-    - cron: '0 0 * * *' # 每日香港時間早上 8 點自動執行
-  workflow_dispatch: # 容許你喺 Actions 分頁手動撳掣執行
+    - cron: '0 0 * * *' # 每日香港時間 8 點執行
+  workflow_dispatch: # 俾你手動撳掣測試
 
-# 解決 Node.js 20 警告，強制使用 Node.js 24 環境
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
@@ -24,10 +23,10 @@ jobs:
       - name: 安裝必要套件
         run: |
           python -m pip install --upgrade pip
-          pip install openai  # OpenRouter 兼容 OpenAI 格式，所以裝呢個就夠
+          pip install requests
 
       - name: 執行 AI 報告程式
         env:
-          # 記住要去 Settings > Secrets > Actions 新增呢粒 Key
+          # 呢度要對應返你 GitHub Settings 粒 Secret 名稱
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python report_bot.py

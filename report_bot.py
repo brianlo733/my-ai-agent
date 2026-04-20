@@ -1,52 +1,46 @@
 import os
-from openai import OpenAI
+import requests
 
-client = OpenAI(
-    api_key=os.environ.get("OPENROUTER_API_KEY"),
-    base_url="https://openrouter.ai/api/v1"
-)
+def run_report():
+    # 1. 攞返你原本嗰粒 GEMINI_API_KEY
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        print("錯誤：搵唔到 GEMINI_API_KEY，請檢查 GitHub Secrets。")
+        return
 
-def get_racing_data():
-    return """
+    # 2. 模擬賽馬資料
+    racing_data = """
     賽事日期: 2026-04-22 (星期三)
     賽場: 跑馬地 (Happy Valley)
     重點場次: 第7場 - 三級賽 (1200米)
     注目馬匹: 1. 英雄豪邁 (穩定), 2. 財駿 (試閘好), 3. 嫡愛心 (強配)
     """
 
-def run_report():
-    racing_info = get_racing_data()
+    # 3. 直接用 API URL (強制用 v1 版本避開 v1beta 嘅問題)
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={api_key}"
     
-    # 呢兩個係 OpenRouter 目前最有效嘅免費中文模型 ID
-    models_to_try = [
-        "qwen/qwen-2-7b-instruct:free",
-        "google/gemini-flash-1.5-8b:free",
-        "meta-llama/llama-3.1-8b-instruct:free"
-    ]
-    
-    for model_name in models_to_try:
-        try:
-            print(f"正在嘗試模型：{model_name}...")
-            response = client.chat.completions.create(
-                model=model_name,
-                messages=[
-                    {"role": "system", "content": "你係一個精通香港賽馬嘅分析師，用流利廣東話回答。"},
-                    {"role": "user", "content": f"幫我簡單總結聽日跑馬地呢場重點，唔好講廢話：\n{racing_info}"}
-                ],
-                extra_headers={
-                    "HTTP-Referer": "https://github.com/brianlo733/my-ai-agent",
-                    "X-Title": "Brian AI Agent"
-                },
-                max_tokens=300
-            )
+    headers = {'Content-Type': 'application/json'}
+    payload = {
+        "contents": [{
+            "parts": [{"text": f"你係專業馬評人，用流利廣東話分析以下資訊，唔好講廢話：\n{racing_data}"}]
+        }]
+    }
+
+    try:
+        print("正在透過 Google 官方 API 分析賽馬資訊...")
+        response = requests.post(url, headers=headers, json=payload)
+        result = response.json()
+        
+        if response.status_code == 200:
+            content = result['candidates'][0]['content']['parts'][0]['text']
+            print("--- 🐎 聽日賽馬情報 (Gemini 官方) ---")
+            print(content)
+        else:
+            print(f"失敗原因：{result}")
+            print("\n💡 如果見到 403，可能係 API Key 唔支援 GitHub 所在地區。")
             
-            print(f"--- 🐎 聽日賽馬情報 ({model_name}) ---")
-            print(response.choices[0].message.content)
-            return # 成功就收工
-            
-        except Exception as e:
-            print(f"{model_name} 失敗：{e}")
-            continue
+    except Exception as e:
+        print(f"連線出錯：{e}")
 
 if __name__ == "__main__":
     run_report()

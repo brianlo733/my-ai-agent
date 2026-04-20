@@ -2,9 +2,10 @@ name: Daily AI Agent Report
 
 on:
   schedule:
-    - cron: '0 0 * * *' # 每日香港時間 8 點執行
-  workflow_dispatch: # 俾你手動撳掣測試
+    - cron: '0 0 * * *' # 每日香港時間早上 8 點執行
+  workflow_dispatch: # 容許手動啟動測試
 
+# 解決 Node.js 版本警告問題
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
@@ -15,7 +16,7 @@ jobs:
       - name: 檢查程式碼
         uses: actions/checkout@v4
 
-      - name: 安裝 Python
+      - name: 設定 Python 環境
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -25,8 +26,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests
 
-      - name: 執行 AI 報告程式
+      - name: 執行 AI 報告
         env:
-          # 呢度要對應返你 GitHub Settings 粒 Secret 名稱
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          # 記住去 Settings > Secrets > Actions 新增呢粒 Key
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: python report_bot.py

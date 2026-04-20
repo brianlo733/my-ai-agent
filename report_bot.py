@@ -1,32 +1,32 @@
 import os
-from google import genai
+from openai import OpenAI
 
-# 1. 設置 API
-client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+# 1. 設置 DeepSeek API
+# 使用你喺 GitHub Secrets 設定嘅 DEEPSEEK_API_KEY
+client = OpenAI(
+    api_key=os.environ.get("DEEPSEEK_API_KEY"),
+    base_url="https://api.deepseek.com"
+)
 
 def run_report():
     try:
-        # 2. 試吓加返 models/ 前綴，睇吓新版 Library 係咪咁樣認
-        response = client.models.generate_content(
-            model='models/gemini-1.5-flash', 
-            contents="Brian！系統終於正式連通喇！我係你嘅雲端助手。"
+        # 2. 呼叫 DeepSeek-V3 (即 deepseek-chat)
+        response = client.chat.completions.create(
+            model="deepseek-chat",
+            messages=[
+                {"role": "system", "content": "你係一個精簡嘅廣東話助手。"},
+                {"role": "user", "content": "用一句廣東話同 Brian 講聲早晨，並確認系統已經成功轉用 DeepSeek。"}
+            ],
+            max_tokens=50,  # 嚴格限制字數，極致慳錢
+            stream=False
         )
         
-        print("--- AI 回應開始 ---")
-        print(response.text)
-        print("--- AI 回應結束 ---")
+        print("--- DeepSeek 回應開始 ---")
+        print(response.choices[0].message.content)
+        print("--- DeepSeek 回應結束 ---")
         
     except Exception as e:
-        print(f"嘗試 models/gemini-1.5-flash 失敗：{e}")
-        # 如果上面都唔得，試吓用返唔加 models/ 嘅最原始寫法
-        try:
-            response = client.models.generate_content(
-                model='gemini-1.5-flash', 
-                contents="Hello Brian! (Second Try)"
-            )
-            print(response.text)
-        except Exception as e2:
-            print(f"第二次嘗試都失敗：{e2}")
+        print(f"DeepSeek 執行出錯：{e}")
 
 if __name__ == "__main__":
     run_report()
